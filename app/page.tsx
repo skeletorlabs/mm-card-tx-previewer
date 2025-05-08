@@ -1,16 +1,18 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { balanceOf } from "./blockchain/balanceOf";
+import Image from "next/image";
 
 export default function Home() {
+  const [account, setAccount] = useState(
+    "0xcDe00Be56479F95b5e33De136AD820FfaE996009"
+  );
+  const [marketRate, setMarketRate] = useState(5.75);
+  const [buffer, setBuffer] = useState(10);
+  const [effectiveRate, setEffectiveRate] = useState(marketRate * (1 - 0.02)); // i.e., * 0.98
   const [balance, setBalance] = useState(0);
   const [amount, setAmount] = useState("");
   const [requiredUSDC, setRequiredUSDC] = useState(0);
-
-  const account = "0xcDe00Be56479F95b5e33De136AD820FfaE996009";
-  const marketRate = 5.75;
-  const buffer = 10;
-  const effectiveRate = marketRate * (1 - 0.02); // i.e., * 0.98
 
   const onInputChange = (value: string) => {
     const re = new RegExp("^[+]?([0-9]+([.][0-9]*)?|[.][0-9]+)$");
@@ -50,7 +52,16 @@ export default function Home() {
     <div className="flex flex-col items-center justify-items-center pt-8">
       <main className="flex flex-col gap-6 items-center">
         <div className="flex flex-col items-center gap-2">
-          <h1 className="text-2xl font-bold pb-8 flex items-center gap-3 text-orange-400 relative box-shadow">
+          <div className="mb-10 w-max h-max">
+            <Image
+              src="/icons/eye-32x32.svg"
+              alt="eye"
+              width={124}
+              height={124}
+              className="h-auto"
+            />
+          </div>
+          {/* <h1 className="text-2xl font-bold pb-8 flex items-center gap-3 text-orange-400 relative box-shadow">
             <svg
               data-slot="icon"
               fill="black"
@@ -96,7 +107,7 @@ export default function Home() {
                 ></path>
               </svg>
             </div>
-          </h1>
+          </h1> */}
           <svg
             xmlnsXlink="http://www.w3.org/1999/xlink"
             viewBox="0 0 343 215"
