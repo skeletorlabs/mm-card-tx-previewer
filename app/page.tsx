@@ -4,12 +4,10 @@ import { balanceOf } from "./blockchain/balanceOf";
 import Image from "next/image";
 
 export default function Home() {
-  const [account, setAccount] = useState(
-    "0xcDe00Be56479F95b5e33De136AD820FfaE996009"
-  );
-  const [marketRate, setMarketRate] = useState(5.75);
-  const [buffer, setBuffer] = useState(10);
-  const [effectiveRate, setEffectiveRate] = useState(marketRate * (1 - 0.02)); // i.e., * 0.98
+  const [account] = useState("0xcDe00Be56479F95b5e33De136AD820FfaE996009");
+  const [marketRate] = useState(5.75);
+  const [buffer] = useState(10);
+  const [effectiveRate] = useState(marketRate * (1 - 0.02)); // i.e., * 0.98
   const [balance, setBalance] = useState(0);
   const [amount, setAmount] = useState("");
   const [requiredUSDC, setRequiredUSDC] = useState(0);
@@ -34,7 +32,7 @@ export default function Home() {
     }
 
     setRequiredUSDC(0);
-  }, [amount, setRequiredUSDC]);
+  }, [amount, buffer, effectiveRate, setRequiredUSDC]);
 
   const getBalance = useCallback(async () => {
     const data = await balanceOf(account);
@@ -46,7 +44,7 @@ export default function Home() {
 
   useEffect(() => {
     getBalance();
-  }, []);
+  }, [getBalance]);
 
   return (
     <div className="flex flex-col items-center justify-items-center pt-8">
