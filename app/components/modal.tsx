@@ -1,20 +1,18 @@
 import {
   Dialog,
   DialogPanel,
-  DialogTitle,
   Transition,
   TransitionChild,
 } from "@headlessui/react";
 import { Roboto } from "next/font/google";
-import { Fragment, useState } from "react";
-import classNames from "classnames";
+import { Fragment } from "react";
 
 const roboto = Roboto({
   subsets: ["latin"],
   weight: ["100", "300", "500", "900"],
 });
 
-export type SocialModalProps = {
+export type ModalProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
   onSubmit: (username: string) => void;
@@ -26,7 +24,8 @@ export default function Modal({
   setOpen,
   onSubmit,
   children,
-}: SocialModalProps) {
+}: ModalProps) {
+  console.log(onSubmit);
   return (
     <Transition appear show={open} as={Fragment}>
       <Dialog
