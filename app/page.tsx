@@ -3,10 +3,49 @@ import { useCallback, useEffect, useState } from "react";
 import { balanceOf } from "./blockchain/balanceOf";
 import Modal from "./components/modal";
 
+export const pasteIcon = (
+  <svg
+    data-slot="icon"
+    fill="none"
+    strokeWidth="1.5"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    className="w-6 h-6"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z"
+    ></path>
+  </svg>
+);
+
+export const pastedIcon = (
+  <svg
+    data-slot="icon"
+    fill="none"
+    strokeWidth="1.5"
+    stroke="currentColor"
+    viewBox="0 0 24 24"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden="true"
+    className="w-6 h-6"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M11.35 3.836c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m8.9-4.414c.376.023.75.05 1.124.08 1.131.094 1.976 1.057 1.976 2.192V16.5A2.25 2.25 0 0 1 18 18.75h-2.25m-7.5-10.5H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V18.75m-7.5-10.5h6.375c.621 0 1.125.504 1.125 1.125v9.375m-8.25-3 1.5 1.5 3-3.75"
+    ></path>
+  </svg>
+);
+
 export default function Home() {
   const [account, setAccount] = useState(
     "0xcDe00Be56479F95b5e33De136AD820FfaE996009"
   );
+  const [hasOnboarded, setHasOnboarded] = useState(false);
   const [marketRate, setMarketRate] = useState("5.75");
   const [buffer, setBuffer] = useState("10");
   const [effectiveRate, setEffectiveRate] = useState(0); // i.e., * 0.98
@@ -20,6 +59,11 @@ export default function Home() {
     BUFFER,
     AMOUNT,
   }
+  const onPaste = async () => {
+    const value = await navigator.clipboard.readText();
+    setAccount(value);
+  };
+
   const onInputChange = useCallback(
     (value: string, type: InputType) => {
       const re = new RegExp("^[+]?([0-9]+([.][0-9]*)?|[.][0-9]+)$");
@@ -56,16 +100,16 @@ export default function Home() {
   }, [marketRate, buffer, onSetRate]);
 
   const getBalance = useCallback(async () => {
+    if (account === "") return setBalance(0);
+
     const data = await balanceOf(account);
-    if (data) {
-      return setBalance(data);
-    }
+    if (data) return setBalance(data);
     setBalance(0);
   }, [account, setBalance]);
 
   useEffect(() => {
     getBalance();
-  }, [getBalance]);
+  }, [account, getBalance]);
 
   return (
     <div className="flex flex-col items-center pt-[10%] relative">
@@ -357,48 +401,66 @@ export default function Home() {
             <label htmlFor="amount" className="text-white/70">
               Metamask account
             </label>
-            <input
-              type="text"
-              id="amount"
-              className="border rounded-md p-2 w-full outline-none text-white border-white/70"
-              placeholder="0x..."
-              value={account}
-              onChange={(e) => setAccount(e.target.value)}
-              autoComplete="off"
-            />
+            <div className="w-full relative">
+              <input
+                type="text"
+                id="amount"
+                className="border rounded-md p-2 w-full outline-none text-white border-white/70 h-[40px] text-sm"
+                placeholder="0x..."
+                value={account}
+                onChange={(e) => setAccount(e.target.value)}
+                autoComplete="off"
+              />
+              <button
+                onClick={onPaste}
+                className="absolute top-0 right-2 flex items-center justify-center w-8 h-full text-white/70 text-sm transition-all hover:scale-105 hover:text-white"
+              >
+                {pasteIcon}
+              </button>
+            </div>
           </div>
           <div className="flex items-center justify-between">
             <div className="flex flex-col gap-2 mt-4">
               <label htmlFor="amount" className="text-white/70">
-                Market rate
+                USD Quote
               </label>
-              <input
-                type="text"
-                id="amount"
-                className="border rounded-md p-2 w-full outline-none text-white border-white/70"
-                placeholder="100.00"
-                value={marketRate}
-                onChange={(e) =>
-                  onInputChange(e.target.value, InputType.MARKETRATE)
-                }
-                autoComplete="off"
-              />
+              <div className="w-full relative">
+                <input
+                  type="text"
+                  id="amount"
+                  className="border rounded-md p-2 w-full outline-none text-white border-white/70 h-[40px]"
+                  placeholder="100.00"
+                  value={marketRate}
+                  onChange={(e) =>
+                    onInputChange(e.target.value, InputType.MARKETRATE)
+                  }
+                  autoComplete="off"
+                />
+                <span className="absolute top-0 right-2 flex items-center justify-center w-8 h-full text-white/70 text-sm">
+                  BRL
+                </span>
+              </div>
             </div>
             <div className="flex flex-col gap-2 mt-4">
               <label htmlFor="amount" className="text-white/70">
-                Buffer
+                Conservative Buffer
               </label>
-              <input
-                type="text"
-                id="amount"
-                className="border rounded-md p-2 w-full outline-none text-white border-white/70"
-                placeholder="100.00"
-                value={buffer}
-                onChange={(e) =>
-                  onInputChange(e.target.value, InputType.BUFFER)
-                }
-                autoComplete="off"
-              />
+              <div className="w-full relative">
+                <input
+                  type="text"
+                  id="amount"
+                  className="border rounded-md p-2 w-full outline-none text-white border-white/70 h-[40px]"
+                  placeholder="100.00"
+                  value={buffer}
+                  onChange={(e) =>
+                    onInputChange(e.target.value, InputType.BUFFER)
+                  }
+                  autoComplete="off"
+                />
+                <span className="absolute top-0 right-2 flex items-center justify-center w-8 h-full text-white/70 text-sm">
+                  USD
+                </span>
+              </div>
             </div>
           </div>
 
