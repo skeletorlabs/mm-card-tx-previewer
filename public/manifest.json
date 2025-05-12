@@ -4,15 +4,10 @@
   "display": "standalone",
   "scope": "/",
   "start_url": "/",
-  "name": "mm-card-tx-previewer",
+  "name": "preview your purchases",
   "short_name": "Metamask Card Preview",
   "description": "Preview purchases before try using your card. Avoid declined transactions.",
   "icons": [
-    {
-      "src": "icons/eye-32x32.svg",
-      "sizes": "32x32",
-      "type": "image/svg"
-    },
     {
       "src": "icons/maskable.png",
       "sizes": "32x32",
