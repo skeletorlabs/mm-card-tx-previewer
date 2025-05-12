@@ -156,10 +156,10 @@ export default function Home() {
   }, [config, onGetRate, getBalance, onGetTokesPrices]);
 
   return (
-    <div className="flex flex-col items-center pt-[10%] relative">
-      <main className="flex flex-col gap-16 items-center">
+    <div className="flex flex-col items-center pt-[5%] relative">
+      <main className="flex flex-col gap-10 items-center">
         <div className="flex flex-col items-center gap-2">
-          <div className="flex justify-between w-full mb-10 text-center">
+          <div className="flex justify-between w-full mb-2 text-center">
             <div className="w-max h-max">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -253,14 +253,14 @@ export default function Home() {
           in your card currency
         </div>
       </main>
-      <footer className="fixed bottom-10 w-full p-4 text-center text-white/70">
+      <footer className="w-full p-4 text-center text-white/70 font-light">
         <div className="flex items-center justify-center gap-1 text-sm">
           <span>Quotes from</span>
           <Link
             href="https://frankfurter.dev/"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-bold transition-all hover:underline"
+            className="text-white/90 transition-all hover:underline"
           >
             Frankfuter
           </Link>
@@ -269,7 +269,7 @@ export default function Home() {
             href="https://defillama.com/docs/api"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-bold transition-all hover:underline"
+            className="text-white/90 transition-all hover:underline"
           >
             Defillama
           </Link>
