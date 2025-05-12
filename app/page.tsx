@@ -260,9 +260,18 @@ export default function Home() {
             href="https://frankfurter.dev/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 rounded-full"
+            className="font-bold transition-all hover:underline"
           >
             Frankfuter
+          </Link>
+          <span>&</span>
+          <Link
+            href="https://defillama.com/docs/api"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-bold transition-all hover:underline"
+          >
+            Defillama
           </Link>
         </div>
       </footer>
