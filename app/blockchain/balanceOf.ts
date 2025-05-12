@@ -11,13 +11,15 @@ const abi = [
   },
 ];
 
-export async function balanceOf(userAddress: string): Promise<number> {
+export async function balanceOf(
+  userAddress: string,
+  tokenAddress: string
+): Promise<number> {
   try {
     const nodeUrl = process.env.NEXT_PUBLIC_LINEA_NODE_RPC_URL as string;
-    const USDC_ADDRESS = process.env.NEXT_PUBLIC_LINEA_USDC_ADDRESS as string;
 
     const provider = new JsonRpcProvider(nodeUrl);
-    const contract = new Contract(USDC_ADDRESS, abi, provider);
+    const contract = new Contract(tokenAddress, abi, provider);
     const balance = Number(
       formatUnits(await contract?.balanceOf(userAddress), 6)
     );

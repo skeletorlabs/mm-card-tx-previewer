@@ -15,17 +15,10 @@ const roboto = Roboto({
 export type ModalProps = {
   open: boolean;
   setOpen: (open: boolean) => void;
-  onSubmit: (username: string) => void;
   children: React.ReactNode;
 };
 
-export default function Modal({
-  open,
-  setOpen,
-  onSubmit,
-  children,
-}: ModalProps) {
-  console.log(onSubmit);
+export default function Modal({ open, setOpen, children }: ModalProps) {
   return (
     <Transition appear show={open} as={Fragment}>
       <Dialog

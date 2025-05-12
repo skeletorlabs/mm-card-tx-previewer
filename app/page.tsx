@@ -1,95 +1,158 @@
 "use client";
 import { useCallback, useEffect, useState } from "react";
 import { balanceOf } from "./blockchain/balanceOf";
-import { InputType } from "./utils/enums";
 import Config from "./components/config";
 import Card from "./components/card";
-import { CURRENCIES, Currency } from "./utils/contants";
+import { Currency, Token, TOKENS } from "./utils/contants";
 import Link from "next/link";
 import Image from "next/image";
 
+export type ConfigType = {
+  account: string;
+  currency: Currency;
+  token: Token;
+  buffer: string;
+};
+
+export type TokenPrice = {
+  asset: string;
+  price: number;
+};
+
 export default function Home() {
-  const [account, setAccount] = useState(
-    "0x0000000000000000000000000000000000000000"
-  );
-  // const [hasOnboarded, setHasOnboarded] = useState(false);
-  const [currency, setCurrency] = useState<Currency>(CURRENCIES[0]);
+  const [config, setConfig] = useState<ConfigType | null>(null);
   const [marketRate, setMarketRate] = useState("0");
-  const [buffer, setBuffer] = useState("10");
   const [effectiveRate, setEffectiveRate] = useState(0); // i.e., * 0.98
   const [balance, setBalance] = useState(0);
   const [amount, setAmount] = useState("");
-  const [requiredUSDC, setRequiredUSDC] = useState(0);
+  const [requiredTokenAmount, setRequiredTokenAmount] = useState(0);
   const [open, setOpen] = useState(true);
+  const [tokenPrices, setTokenPrices] = useState<TokenPrice[]>([]);
 
-  const onPaste = async () => {
-    const value = await navigator.clipboard.readText();
-    setAccount(value);
-  };
+  const onCheckConfig = useCallback(async () => {
+    const storedConfig = localStorage.getItem("config");
 
-  const onInputChange = useCallback(
-    (value: string, type: InputType) => {
-      const re = new RegExp("^[+]?([0-9]+([.][0-9]*)?|[.][0-9]+)$");
+    if (storedConfig) {
+      const jsonConfig = JSON.parse(storedConfig);
+      if (!jsonConfig) return setOpen(true);
 
-      if (value === "" || re.test(value)) {
-        if (type === InputType.MARKETRATE) setMarketRate(value);
-        else if (type === InputType.BUFFER) setBuffer(value);
-        else if (type === InputType.AMOUNT) setAmount(value);
-      }
+      setConfig(jsonConfig);
+      setOpen(false);
+    }
+  }, [setConfig, setOpen]);
 
-      return false;
+  const onSubmit = useCallback(
+    async (
+      account: string,
+      currency: Currency,
+      token: Token,
+      buffer: string
+    ) => {
+      localStorage.setItem(
+        "config",
+        JSON.stringify({
+          account: account,
+          currency: currency,
+          token: token,
+          buffer: buffer,
+        })
+      );
+
+      await onCheckConfig();
+      setOpen(false);
     },
-    [setMarketRate, setBuffer, setAmount]
+    [onCheckConfig, setOpen]
   );
 
-  const onGetRate = useCallback(async () => {
-    const data = await fetch(
-      `https://api.frankfurter.app/latest?from=USD&to=${currency.name}`
-    );
-    const json = await data.json();
-    const rate = json.rates[currency.name];
-    setMarketRate(rate);
-  }, [currency, setMarketRate]);
+  const setMax = useCallback(() => {
+    if (!config || effectiveRate === 0) return;
 
-  useEffect(() => {
+    const buffer = parseFloat(config.buffer || "0");
+    const maxSpendableFiat = (balance - buffer) * effectiveRate;
+
+    setAmount(maxSpendableFiat.toFixed(21));
+  }, [balance, effectiveRate, config]);
+
+  const onInputChange = useCallback(
+    (value: string) => {
+      const re = new RegExp("^[+]?([0-9]+([.][0-9]*)?|[.][0-9]+)$");
+      if (value === "" || re.test(value)) {
+        setAmount(value);
+      }
+      return false;
+    },
+    [setAmount]
+  );
+
+  const onSetRequiredTokenAmount = useCallback(() => {
     const parsedAmount = parseFloat(amount);
     if (parsedAmount > 0) {
-      const usdc = parsedAmount / effectiveRate;
-      const usdcWithBuffer = usdc + parseFloat(buffer);
-
-      return setRequiredUSDC(usdcWithBuffer);
+      const token = parsedAmount / effectiveRate;
+      const tokenWithBuffer = token + parseFloat(config?.buffer || "0");
+      return setRequiredTokenAmount(tokenWithBuffer);
     }
-
-    setRequiredUSDC(0);
-  }, [amount, buffer, effectiveRate, , setRequiredUSDC]);
-
-  const onSetRate = useCallback(async () => {
-    setEffectiveRate(parseFloat(marketRate) * (1 - 0.02));
-  }, [marketRate, setEffectiveRate]);
-
-  useEffect(() => {
-    onSetRate();
-  }, [marketRate, buffer, onSetRate]);
+    setRequiredTokenAmount(0);
+  }, [amount, effectiveRate, config, setRequiredTokenAmount]);
 
   const getBalance = useCallback(async () => {
-    if (account === "") return setBalance(0);
-
-    const data = await balanceOf(account);
+    if (!config) return setBalance(0);
+    const data = await balanceOf(config.account, config.token.address);
     if (data) return setBalance(data);
     setBalance(0);
-  }, [account, setBalance]);
+  }, [config, setBalance]);
+
+  const onGetRate = useCallback(async () => {
+    if (!config) return;
+    const data = await fetch(
+      `https://api.frankfurter.app/latest?from=USD&to=${config.currency.name}`
+    );
+    const json = await data.json();
+    const rate = json.rates[config.currency.name];
+    setMarketRate(rate);
+    console.log("Rate", marketRate);
+    setEffectiveRate(parseFloat(rate) * (1 - 0.02));
+  }, [config, marketRate, setMarketRate]);
+
+  type Assets = {
+    peggedAssets: {
+      symbol: string;
+      price: number;
+    }[];
+  };
+
+  const onGetTokesPrices = useCallback(async () => {
+    const url = "https://stablecoins.llama.fi/stablecoins?includePrices=true";
+    const data = await fetch(url);
+    const json: Assets = await data.json();
+
+    const prices = json.peggedAssets
+      .filter((asset) => TOKENS.find((token) => token.symbol === asset.symbol))
+      .map((asset) => ({
+        asset: asset.symbol,
+        price: asset.price,
+      }));
+
+    setTokenPrices(prices);
+  }, [setTokenPrices]);
 
   useEffect(() => {
-    getBalance();
-  }, [account, getBalance]);
+    onSetRequiredTokenAmount();
+  }, [amount, effectiveRate, onSetRequiredTokenAmount]);
 
+  // Load config once on mount
   useEffect(() => {
-    onGetRate();
-  }, [currency, onGetRate]);
+    onCheckConfig();
+    // intentionally NOT including onGetRate to avoid unnecessary re-renders
+  }, [onCheckConfig]);
 
+  // Then, when config is ready, get the rate
   useEffect(() => {
-    onGetRate();
-  }, [onGetRate]);
+    if (config) {
+      onGetRate();
+      onGetTokesPrices();
+      getBalance();
+    }
+  }, [config, onGetRate, getBalance, onGetTokesPrices]);
 
   return (
     <div className="flex flex-col items-center pt-[10%] relative">
@@ -112,7 +175,7 @@ export default function Home() {
             </div>
             <button
               onClick={() => setOpen(true)}
-              className="w-8 h-8 rounded-full text-white/70 shadow-md flex items-center justify-center transition-all hover:scale-105 hover:text-white"
+              className="w-8 h-8 rounded-full text-white/70 shadow-md flex items-center justify-center transition-all hover:scale-105 hover:text-white hover:cursor-pointer"
             >
               <svg
                 data-slot="icon"
@@ -136,73 +199,99 @@ export default function Home() {
               </svg>
             </button>
           </div>
-          <Card account={account} balance={balance} />
-          <span className="flex items-center justify-end w-full text-sm font-semibold">
-            1 {currency.name} / {effectiveRate} USD
-          </span>
+          <Card
+            symbol={config?.token.symbol || "$"}
+            account={
+              config?.account || "0x00000000000000000000000000000000000000000"
+            }
+            balance={balance}
+          />
+          <div className="flex items-center justify-between w-full text-sm font-semibold">
+            <span className="">
+              1 {config?.token.symbol || "USDC"} ~{" "}
+              {tokenPrices.find((e) => e.asset === config?.token.symbol)
+                ?.price || 0}{" "}
+              USD
+            </span>
+            <span className="">
+              1 {config?.currency.name || "FIAT"} ~ {effectiveRate} USD
+            </span>
+          </div>
         </div>
 
-        <div className="flex flex-col justify-center w-full">
+        <div className="flex flex-col gap-2 w-full">
           <label htmlFor="amount" className="text-white/70">
-            Amount to spend in {currency.name}
+            Amount to spend in {config?.currency.name || "FIAT"}
           </label>
-          <input
-            type="text"
-            id="amount"
-            className={`border border-white/70 rounded-md p-2 w-full outline-none ${
-              requiredUSDC > balance ? "text-red-500" : "text-white"
-            }`}
-            placeholder={`e.g. ${currency.symbol} 100.00`}
-            value={amount}
-            onChange={(e) => onInputChange(e.target.value, InputType.AMOUNT)}
-            autoComplete="off"
-          />
+          <div className="w-full relative">
+            <input
+              type="text"
+              id="amount"
+              className={`border border-white/70 rounded-md p-2 w-full outline-none ${
+                requiredTokenAmount > balance ? "text-red-500" : "text-white"
+              }`}
+              placeholder={`e.g. ${config?.currency.symbol || "$"} 100.00`}
+              value={amount}
+              onChange={(e) => onInputChange(e.target.value)}
+              autoComplete="off"
+            />
+            {balance > 0 && (
+              <div className="absolute top-0 right-2 flex items-center justify-center w-14 h-full text-white/70 text-sm">
+                <button
+                  onClick={setMax}
+                  className="bg-blue-500 rounded-full border-none outline-none text-white p-[2px] px-3"
+                >
+                  Max
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         <div
           className={`${
-            requiredUSDC > 0 ? "block" : "hidden"
+            requiredTokenAmount > 0 ? "block" : "hidden"
           } max-w-xs text-center`}
         >
           Your transaction amount of{" "}
           <span className="font-bold">
-            {Number(amount || 0).toLocaleString("en-us")} BRL
+            {Number(amount || 0).toLocaleString("en-us")}{" "}
+            {config?.currency.symbol}
           </span>{" "}
           is{" "}
           <span className="font-bold">
-            {requiredUSDC.toLocaleString("en-us")} USD
+            {requiredTokenAmount.toLocaleString("en-us")} USD
           </span>{" "}
           in your card currency
         </div>
       </main>
       <footer className="fixed bottom-0 w-full p-4 text-center text-white/70">
-        <div className="flex items-center justify-center gap-2">
-          <span className="text-sm">Powered by</span>
+        <div className="flex items-center justify-center gap-1 text-sm">
+          <span>Quotes from</span>
           <Link
             href="https://frankfurter.dev/"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center w-8 h-8 rounded-full shadow-md transition-all hover:scale-105"
+            className="flex items-center justify-center gap-2 rounded-full"
           >
+            <span>Frankfuter</span>
             <Image
               src="/frankfurt.png"
               alt="Frankfurter"
               width={24}
               height={24}
+              className="box-shadow"
             />
           </Link>
         </div>
       </footer>
+
+      {/* Modal */}
       <Config
-        account={account}
-        currency={currency}
-        setCurrency={setCurrency}
-        buffer={buffer}
-        marketRate={marketRate}
-        onInputChange={onInputChange}
-        onPaste={onPaste}
+        config={config}
         open={open}
         setOpen={setOpen}
+        onSubmit={onSubmit}
       />
     </div>
   );

@@ -1,18 +1,20 @@
-import { CURRENCIES, Currency } from "../utils/contants";
-import { InputType } from "../utils/enums";
+import { useCallback, useEffect, useState } from "react";
+import { ConfigType } from "../page";
+import { CURRENCIES, Currency, Token, TOKENS } from "../utils/contants";
 import { shortAddress } from "../utils/shortAddress";
 import Modal from "./modal";
+import Dropdown from "./dropdown";
 
 export type ConfigProps = {
-  account: string;
-  currency: Currency;
-  setCurrency: (currency: Currency) => void;
-  marketRate: string;
-  buffer: string;
-  onInputChange: (value: string, type: InputType) => void;
-  onPaste: () => void;
+  config: ConfigType | null;
   open: boolean;
   setOpen: (open: boolean) => void;
+  onSubmit: (
+    account: string,
+    currency: Currency,
+    token: Token,
+    buffer: string
+  ) => void;
 };
 
 export const pasteIcon = (
@@ -35,29 +37,56 @@ export const pasteIcon = (
 );
 
 export default function Config({
-  account,
-  currency,
-  setCurrency,
-  marketRate,
-  buffer,
-  onInputChange,
-  onPaste,
+  config,
   open,
   setOpen,
+  onSubmit,
 }: ConfigProps) {
+  const [account, setAccount] = useState("");
+  const [buffer, setBuffer] = useState("");
+  const [currency, setCurrency] = useState<Currency>(CURRENCIES[0]);
+  const [token, setToken] = useState<Token>(TOKENS[0]);
+
+  const onPaste = useCallback(async () => {
+    const value = await navigator.clipboard.readText();
+    setAccount(value);
+  }, [setAccount]);
+
+  const onInputChange = useCallback(
+    (value: string) => {
+      const re = new RegExp("^[+]?([0-9]+([.][0-9]*)?|[.][0-9]+)$");
+      if (value === "" || re.test(value)) {
+        setBuffer(value);
+      }
+      return false;
+    },
+    [setBuffer]
+  );
+
+  useEffect(() => {
+    if (config) {
+      setAccount(config.account);
+      setBuffer(config.buffer);
+      setCurrency(
+        CURRENCIES.find((currency) => currency.name === config.currency.name) ||
+          CURRENCIES[0]
+      );
+    }
+  }, [config, setAccount, setBuffer, setCurrency]);
+
   return (
-    <Modal onSubmit={() => {}} open={open} setOpen={setOpen}>
+    <Modal open={open} setOpen={setOpen}>
       <div className="flex flex-col gap-1">
         <h2 className="text-lg font-bold">
           Preview purchase card configuration
         </h2>
         <p className="text-sm text-gray-400">
-          You can review the details before proceeding with the purchase.
+          You can review the details before proceeding with previews.
         </p>
         <div className="flex flex-col gap-1 mt-4">
           <div className="flex items-center gap-2">
             <label htmlFor="amount" className="text-white/70">
-              Metamask account
+              Account Address
             </label>
             <button
               onClick={onPaste}
@@ -73,69 +102,50 @@ export default function Config({
           </span>
           <div className="w-full relative"></div>
         </div>
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex flex-col gap-2 mt-4">
-            <label htmlFor="amount" className="text-white/70">
-              USD Quote
-            </label>
-            <div className="w-full relative">
-              <input
-                type="text"
-                id="amount"
-                className="border rounded-md p-2 w-full outline-none text-white border-white/70 h-[40px]"
-                placeholder="100.00"
-                value={marketRate}
-                onChange={(e) =>
-                  onInputChange(e.target.value, InputType.MARKETRATE)
-                }
-                autoComplete="off"
-              />
-              <div className="absolute top-0 right-2 flex items-center justify-center w-14 h-full text-white/70 text-sm">
-                <div className="flex items-center justify-center w-14 h-6 text-white/70 text-sm bg-blue-500 rounded-full">
-                  <select
-                    value={currency.name}
-                    onChange={(e) =>
-                      setCurrency(
-                        CURRENCIES.find(
-                          (currency) => currency.name === e.target.value
-                        ) || CURRENCIES[0]
-                      )
-                    }
-                    className="bg-blue-500 rounded-full border-none outline-none text-white/70"
-                  >
-                    {CURRENCIES.map((currency, index) => (
-                      <option key={index}>{currency.name}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="flex flex-col gap-2 mt-4">
-            <label htmlFor="amount" className="text-white/70">
-              Conservative Buffer
-            </label>
-            <div className="w-full relative">
-              <input
-                type="text"
-                id="amount"
-                className="border rounded-md p-2 w-full outline-none text-white border-white/70 h-[40px]"
-                placeholder="e.g $10.00"
-                value={buffer}
-                onChange={(e) =>
-                  onInputChange(e.target.value, InputType.BUFFER)
-                }
-                autoComplete="off"
-              />
-              <span className="absolute top-0 right-2 flex items-center justify-center w-8 h-full text-white/70 text-sm">
-                USD
-              </span>
-            </div>
+        <div className="flex items-center gap-4">
+          <Dropdown
+            title="USD Quote For"
+            items={CURRENCIES}
+            selected={currency.option}
+            onSelect={(e) => {
+              setCurrency(
+                CURRENCIES.find((currency) => currency.name === e) ||
+                  CURRENCIES[0]
+              );
+            }}
+          />
+
+          <Dropdown
+            title="Token Balance"
+            items={TOKENS}
+            selected={token.option}
+            onSelect={(e) => {
+              setToken(TOKENS.find((token) => token.name === e) || TOKENS[0]);
+            }}
+          />
+        </div>
+        <div className="flex flex-col gap-2 mt-4 w-full">
+          <label htmlFor="amount" className="text-white/70">
+            Conservative Buffer
+          </label>
+          <div className="w-full relative">
+            <input
+              type="text"
+              id="amount"
+              className="border rounded-md p-2 w-full outline-none text-white border-white/70 h-[40px]  focus:bg-black/10"
+              placeholder="e.g $10.00"
+              value={buffer}
+              onChange={(e) => onInputChange(e.target.value)}
+              autoComplete="off"
+            />
+            <span className="absolute top-0 right-2 flex items-center justify-center w-8 h-full text-white/70 text-sm">
+              USD
+            </span>
           </div>
         </div>
 
         <button
-          onClick={() => setOpen(false)}
+          onClick={() => onSubmit(account, currency, token, buffer)}
           className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-md"
         >
           Confirm

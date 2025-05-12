@@ -1,11 +1,12 @@
-import { shortAddress } from "../utils/shortAddress"
+import { shortAddress } from "../utils/shortAddress";
 
 export type CardProps = {
+  symbol: string;
   balance: number;
   account: string;
 };
 
-export default function Card({balance, account}: CardProps) {
+export default function Card({ symbol, balance, account }: CardProps) {
   return (
     <svg
       xmlnsXlink="http://www.w3.org/1999/xlink"
@@ -164,7 +165,7 @@ export default function Card({balance, account}: CardProps) {
         >
           {balance.toLocaleString("en-us", { maximumFractionDigits: 2 })}
           <tspan dx="4" fontSize="16px" fontWeight="400" fill="#262833">
-            USDC
+            {symbol}
           </tspan>
         </text>
       </g>
