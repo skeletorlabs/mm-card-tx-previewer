@@ -209,12 +209,18 @@ export default function Home() {
           <div className="flex items-center justify-between w-full text-sm font-semibold">
             <span className="">
               1 {config?.token.symbol || "USDC"} ~{" "}
-              {tokenPrices.find((e) => e.asset === config?.token.symbol)
-                ?.price || 0}{" "}
+              {tokenPrices
+                .find((e) => e.asset === config?.token.symbol)
+                ?.price.toLocaleString("en-us", { maximumFractionDigits: 5 }) ||
+                0}{" "}
               USD
             </span>
             <span className="">
-              1 {config?.currency.name || "FIAT"} ~ {effectiveRate} USD
+              1 {config?.currency.name || "FIAT"} ~{" "}
+              {effectiveRate.toLocaleString("en-us", {
+                maximumFractionDigits: 5,
+              })}{" "}
+              USD
             </span>
           </div>
         </div>

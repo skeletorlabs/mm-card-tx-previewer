@@ -102,7 +102,7 @@ export default function Config({
           </span>
           <div className="w-full relative"></div>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center justify-between">
           <Dropdown
             title="USD Quote For"
             items={CURRENCIES}
