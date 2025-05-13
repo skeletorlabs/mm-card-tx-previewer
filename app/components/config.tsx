@@ -15,6 +15,7 @@ export type ConfigProps = {
     token: Token,
     buffer: string
   ) => void;
+  onDelete: () => void;
 };
 
 export const pasteIcon = (
@@ -41,6 +42,7 @@ export default function Config({
   open,
   setOpen,
   onSubmit,
+  onDelete,
 }: ConfigProps) {
   const [account, setAccount] = useState("");
   const [buffer, setBuffer] = useState("");
@@ -76,9 +78,9 @@ export default function Config({
 
   return (
     <Modal open={open} setOpen={setOpen}>
-      <div className="flex flex-col gap-1">
+      <div className="flex flex-col">
         <h2 className="text-lg font-bold">
-          Preview purchase card configuration
+          Set your configuration for the preview
         </h2>
         <p className="text-sm text-gray-400">
           You can review the details before proceeding with previews.
@@ -149,6 +151,12 @@ export default function Config({
           className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-md"
         >
           Confirm
+        </button>
+        <button
+          onClick={() => onDelete()}
+          className="text-red-400 mt-2 text-sm transition-all hover:opacity-80"
+        >
+          Delete my saved data
         </button>
       </div>
     </Modal>
