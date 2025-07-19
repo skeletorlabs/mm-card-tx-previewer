@@ -4,15 +4,28 @@ export type CardProps = {
   symbol: string;
   balance: number;
   account: string;
+  fiatBalance: number;
+  fiatSymbol: string;
+  displayFiat: boolean;
+  setDisplayFiat: (value: boolean) => void;
 };
 
-export default function Card({ symbol, balance, account }: CardProps) {
+export default function Card({
+  symbol,
+  balance,
+  account,
+  fiatBalance,
+  fiatSymbol,
+  displayFiat,
+  setDisplayFiat,
+}: CardProps) {
   return (
     <svg
       xmlnsXlink="http://www.w3.org/1999/xlink"
       viewBox="0 0 343 215"
       xmlns="http://www.w3.org/2000/svg"
       width="360"
+      className="xl:w-[460px] h-auto"
       // height="251"
     >
       <mask
@@ -162,10 +175,13 @@ export default function Card({ symbol, balance, account }: CardProps) {
           fontSize="32px"
           fontWeight="700"
           fill="#262833"
+          onClick={() => setDisplayFiat(!displayFiat)}
         >
-          {balance.toLocaleString("en-us", { maximumFractionDigits: 2 })}
+          {displayFiat
+            ? fiatBalance.toLocaleString("en-us", { maximumFractionDigits: 2 })
+            : balance.toLocaleString("en-us", { maximumFractionDigits: 2 })}
           <tspan dx="4" fontSize="16px" fontWeight="400" fill="#262833">
-            {symbol}
+            {displayFiat ? fiatSymbol : symbol}
           </tspan>
         </text>
       </g>

@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Metamask Card Preview",
+  title: "Purchase Preview",
   description:
     "Preview purchases before try using your card. Avoid declined transactions.",
 };

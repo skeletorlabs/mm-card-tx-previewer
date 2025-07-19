@@ -13,18 +13,24 @@ const roboto = Roboto({
 });
 
 export type ModalProps = {
+  canClose: boolean;
   open: boolean;
   setOpen: (open: boolean) => void;
   children: React.ReactNode;
 };
 
-export default function Modal({ open, setOpen, children }: ModalProps) {
+export default function Modal({
+  canClose,
+  open,
+  setOpen,
+  children,
+}: ModalProps) {
   return (
     <Transition appear show={open} as={Fragment}>
       <Dialog
         as="div"
         className={`relative z-20 ${roboto.className}`}
-        onClose={() => setOpen(false)}
+        onClose={() => setOpen(!canClose)}
       >
         <TransitionChild
           as={Fragment}

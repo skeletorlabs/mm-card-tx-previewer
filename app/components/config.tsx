@@ -4,6 +4,7 @@ import { CURRENCIES, Currency, Token, TOKENS } from "../utils/contants";
 import { shortAddress } from "../utils/shortAddress";
 import Modal from "./modal";
 import Dropdown from "./dropdown";
+import { Cog6ToothIcon } from "@heroicons/react/24/outline";
 
 export type ConfigProps = {
   config: ConfigType | null;
@@ -44,6 +45,7 @@ export default function Config({
   onSubmit,
   onDelete,
 }: ConfigProps) {
+  const [onboard, setOnboard] = useState(true);
   const [account, setAccount] = useState("");
   const [buffer, setBuffer] = useState("");
   const [currency, setCurrency] = useState<Currency>(CURRENCIES[0]);
@@ -73,92 +75,118 @@ export default function Config({
         CURRENCIES.find((currency) => currency.name === config.currency.name) ||
           CURRENCIES[0]
       );
+      setOnboard(false);
+
+      return;
     }
+
+    setAccount("");
+    setBuffer("");
+    setCurrency(CURRENCIES[0]);
+    setOnboard(true);
   }, [config, setAccount, setBuffer, setCurrency]);
 
   return (
-    <Modal open={open} setOpen={setOpen}>
-      <div className="flex flex-col">
-        <h2 className="text-lg font-bold">
-          Set your configuration for the preview
-        </h2>
-        <p className="text-sm text-gray-400">
-          You can review the details before proceeding with previews.
-        </p>
-        <div className="flex flex-col gap-1 mt-4">
-          <div className="flex items-center gap-2">
-            <label htmlFor="amount" className="text-white/70">
-              Account Address
-            </label>
-            <button
-              onClick={onPaste}
-              className="flex items-center justify-center w-8 h-full text-white/70 text-sm transition-all hover:scale-105 hover:text-white"
-            >
-              {pasteIcon}
-            </button>
+    <Modal canClose={!!config} open={open} setOpen={setOpen}>
+      {onboard && (
+        <div className="flex flex-col items-center justify-between min-h-70 max-w-[360px] text-center">
+          <div className="flex flex-col items-center">
+            <Cog6ToothIcon width={80} height={80} />
+            <h2 className="text-3xl font-bold mt-6">Set your configuration</h2>
+            <p className="text-lg text-gray-400">
+              You can review the details before proceeding with previews.
+            </p>
           </div>
-          <span>
-            {shortAddress(
-              account || "0x00000000000000000000000000000000000000000"
-            )}
-          </span>
-          <div className="w-full relative"></div>
-        </div>
-        <div className="flex items-center justify-between">
-          <Dropdown
-            title="USD Quote For"
-            items={CURRENCIES}
-            selected={currency.option}
-            onSelect={(e) => {
-              setCurrency(
-                CURRENCIES.find((currency) => currency.name === e) ||
-                  CURRENCIES[0]
-              );
-            }}
-          />
 
-          <Dropdown
-            title="Token Balance"
-            items={TOKENS}
-            selected={token.option}
-            onSelect={(e) => {
-              setToken(TOKENS.find((token) => token.name === e) || TOKENS[0]);
-            }}
-          />
+          <button
+            onClick={() => setOnboard(false)}
+            className="w-full mt-4 bg-blue-500 text-white py-2 px-4 rounded-md transition-colors hover:bg-blue-400"
+          >
+            Start
+          </button>
         </div>
-        <div className="flex flex-col gap-2 mt-4 w-full">
-          <label htmlFor="amount" className="text-white/70">
-            Conservative Buffer
-          </label>
-          <div className="w-full relative">
-            <input
-              type="text"
-              id="amount"
-              className="border rounded-md p-2 w-full outline-none text-white border-white/70 h-[40px]  focus:bg-black/10"
-              placeholder="e.g $10.00"
-              value={buffer}
-              onChange={(e) => onInputChange(e.target.value)}
-              autoComplete="off"
-            />
-            <span className="absolute top-0 right-2 flex items-center justify-center w-8 h-full text-white/70 text-sm">
-              USD
+      )}
+      {!onboard && (
+        <div className="flex flex-col items-center justify-center max-w-[360px] text-center">
+          <h2 className="text-3xl font-bold">Set your configuration</h2>
+          <p className="text-lg text-gray-400">
+            You can review the details before proceeding with previews.
+          </p>
+          <div className="flex flex-col items-center justify-center gap-1 mt-4 py-2 bg-black/40 w-full">
+            <div className="flex items-center gap-2">
+              <label htmlFor="amount" className="text-white/70">
+                Account Address
+              </label>
+              <button
+                onClick={onPaste}
+                className="flex items-center justify-center w-8 h-full text-white/70 text-sm transition-all hover:scale-105 hover:text-white"
+              >
+                {pasteIcon}
+              </button>
+            </div>
+            <span>
+              {shortAddress(
+                account || "0x00000000000000000000000000000000000000000"
+              )}
             </span>
+            <div className="w-full relative"></div>
           </div>
-        </div>
+          <div className="flex items-center justify-between w-full">
+            <Dropdown
+              title="USD Quote For"
+              items={CURRENCIES}
+              selected={currency.option}
+              onSelect={(e) => {
+                setCurrency(
+                  CURRENCIES.find((currency) => currency.name === e) ||
+                    CURRENCIES[0]
+                );
+              }}
+            />
 
-        <button
-          onClick={() => onSubmit(account, currency, token, buffer)}
-          className="mt-4 bg-blue-500 text-white py-2 px-4 rounded-md"
-        >
-          Confirm
-        </button>
-        <button
-          onClick={() => onDelete()}
-          className="text-red-400 mt-2 text-sm transition-all hover:opacity-80"
-        >
-          Delete my saved data
-        </button>
-      </div>
+            <Dropdown
+              title="Token Balance"
+              items={TOKENS}
+              selected={token.option}
+              onSelect={(e) => {
+                setToken(TOKENS.find((token) => token.name === e) || TOKENS[0]);
+              }}
+            />
+          </div>
+          <div className="flex flex-col gap-2 mt-4 w-full">
+            <label htmlFor="amount" className="text-white/70">
+              Conservative Buffer
+            </label>
+            <div className="w-full relative">
+              <input
+                type="text"
+                id="amount"
+                className="border rounded-md p-2 w-full outline-none text-white border-white/70 h-[40px]  focus:bg-black/10"
+                placeholder="e.g $10.00"
+                value={buffer}
+                onChange={(e) => onInputChange(e.target.value)}
+                autoComplete="off"
+              />
+              <span className="absolute top-0 right-2 flex items-center justify-center w-8 h-full text-white/70 text-sm">
+                {token.symbol}
+              </span>
+            </div>
+          </div>
+
+          <button
+            onClick={() => onSubmit(account, currency, token, buffer)}
+            className="w-full mt-4 bg-blue-500 text-white py-2 px-4 rounded-md transition-colors hover:bg-blue-400"
+          >
+            Confirm
+          </button>
+          <button
+            onClick={() => onDelete()}
+            className="mt-2 text-xs text-white/70 w-max self-center transition-all hover:opacity-80"
+          >
+            Delete my saved data
+          </button>
+        </div>
+      )}
     </Modal>
   );
 }

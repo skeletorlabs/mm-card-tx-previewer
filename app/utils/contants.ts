@@ -59,3 +59,13 @@ export const TOKENS: Token[] = [
     address: "0xe5D7C2a44FfDDf6b295A15c148167daaAf5Cf34f",
   },
 ];
+
+export type Fees = {
+  lineaFee: number;
+  swapFee: number;
+};
+
+export const FEES: Fees = {
+  lineaFee: 0.0085, // 2% fee for Linea
+  swapFee: 0.02, // 0.875% swap fee
+};
