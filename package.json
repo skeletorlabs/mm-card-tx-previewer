@@ -2,6 +2,10 @@
   "name": "mm-card-tx-previewer",
   "version": "0.1.0",
   "private": true,
+  "description": "Metamask card transaction previewer",
+  "author": "Skeletor Labs (https://github.com/skeletorlabs)",
+  "license": "MIT",
+  "homepage": "https://github.com/skeletorlabs/mm-card-tx-previewer",
   "scripts": {
     "dev": "next dev",
     "build": "next build",
